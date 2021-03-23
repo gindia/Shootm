@@ -14,7 +14,7 @@
 #define MAX_KEYBOARD_SIZE 350
 
 #define SIDE_PLAYER 0
-#define SIDE_ENEMY  0
+#define SIDE_ENEMY  1
 
 static const int PLAYER_SPEED        = 4;
 static const int PLAYER_RELOAD       = 8;
@@ -28,5 +28,5 @@ static int enemy_spawn_timer;
 SDL_Texture *load_texture(char *file_name);
 void blit(SDL_Texture *texture, int x, int y);
 
-static int collision(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2);
+inline static int collision(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2);
 #endif

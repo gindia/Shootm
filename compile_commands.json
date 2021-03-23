@@ -13,6 +13,7 @@
       "-Wall",
       "-Wno-unused-variable",
       "-Wno-unused-function",
+      "-std=c11",
       "-Wno-undefined-internal",
       "src/win32_shootm.c",
       "-o",

@@ -142,6 +142,7 @@ static void do_fighters(void)
 static void do_bullets(void)
 {
     Entity *b, *prev;
+    int coll = 0;
 
     prev = &stage.bulletHead;
 
@@ -149,8 +150,9 @@ static void do_bullets(void)
     {
         b->x += b->dx;
         b->y += b->dy;
+        coll = bullet_hit(b);
 
-        if(bullet_hit(b) || b->x > SCREEN_WIDTH)
+        if(coll || b->x > SCREEN_WIDTH)
         {
             if(b == stage.bulletTail)
             {
@@ -169,10 +171,14 @@ static void do_bullets(void)
 static int  bullet_hit(Entity *b)
 {
     Entity *e;
+    int bullet_coll, difrent_sides;
 
     for (e = stage.fighterHead.next ; e != NULL ; e = e->next)
     {
-        if ((e->side != b->side) && collision(b->x, b->y, b->w, b->h, e->x, e->y, e->w, e->h))
+        bullet_coll   = collision(b->x, b->y, b->w, b->h, e->x, e->y, e->w, e->h);
+        difrent_sides = (e->side != b->side);
+
+        if (difrent_sides && bullet_coll)
         {
             b->health = 0;
             e->health = 0;
@@ -188,7 +194,7 @@ static void spwan_enemies(void)
 
     enemy_spawn_timer--;
 
-    if (enemy_spawn_timer <=0 )
+    if (enemy_spawn_timer <= 0 )
     {
         enemy = malloc(sizeof(Entity));
         memset(enemy, 0, sizeof(Entity));

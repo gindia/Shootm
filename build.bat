@@ -25,9 +25,9 @@ IF NOT EXIST .\exe mkdir .\exe
 ROBOCOPY .\bin\x64 .\exe *.dll /NDL /NJH /NJS /nc /ns /np
 
 echo %_fBWhite%
-echo -----------------------------------
-echo ---------  %_fGreen%COMPILING %_fBBlue%x64%_fBWhite%  ---------
-echo -----------------------------------
+echo ----------------------------------------
+echo ---------  %_fGreen%COMPILING MSVC %_fBBlue%x64%_fBWhite%  ---------
+echo ----------------------------------------
 pushd exe
 
 
@@ -56,6 +56,6 @@ set /A _toc=%time:~0,2%*3600^
 
 set /A _elapsed=%_toc%-%_tic
 
-echo -----------------------------------
+echo ----------------------------------------
 echo %_fGreen% %_elapsed%  seconds.%_fBWhite%
-echo -----------------------------------
+echo ----------------------------------------

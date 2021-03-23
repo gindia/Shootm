@@ -9,7 +9,6 @@
 
 #include "Windows.h"
 
-
 static void cap_frame_rate(long *then ,float *remainder);
 
 int WINAPI wWinMain (HINSTANCE hInstance,
