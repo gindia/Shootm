@@ -1,0 +1,25 @@
+[
+  {
+    "arguments": [
+      "-c",
+      "-I",
+      "include",
+      "-ffast-math",
+      "-save-temps=obj",
+      "-g",
+      "-ggdb",
+      "-O0",
+      "-Werror",
+      "-Wall",
+      "-Wno-unused-variable",
+      "-Wno-unused-function",
+      "-Wno-undefined-internal",
+      "src/win32_shootm.c",
+      "-o",
+      "build/win32_shootm.exe"
+    ],
+    "directory": "W:/Shootm",
+    "file": "W:/Shootm/src/win32_shootm.c",
+    "output": "W:/Shootm/exe/win32_Shootm.exe"
+  }
+]
