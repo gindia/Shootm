@@ -10,6 +10,7 @@
 #define SCREEN_WIDTH  1280
 #define SCREEN_HEIGHT 720
 
+#define FPS 60
 
 #define MAX_KEYBOARD_SIZE 350
 
@@ -20,13 +21,21 @@ static const int PLAYER_SPEED        = 4;
 static const int PLAYER_RELOAD       = 8;
 static const int BULLET_ACCELERATION = 16;
 
+static const int ENEMY_BULLET_SPEED  = 8;
+
+static SDL_Texture *player_texture;
 static SDL_Texture *bullet_texture;
+
 static SDL_Texture *enemy_texture;
+static SDL_Texture *enemy_bullet_texture;
 
 static int enemy_spawn_timer;
+static int stage_reset_timer;
 
 SDL_Texture *load_texture(char *file_name);
 void blit(SDL_Texture *texture, int x, int y);
 
 inline static int collision(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2);
+inline static void calc_slope(int x1, int y1, int x2, int y2, float *dx, float *dy);
+
 #endif
