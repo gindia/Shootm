@@ -15,7 +15,7 @@ typedef struct {
     int keyboard[MAX_KEYBOARD_SIZE];
 } App;
 
-typedef struct{
+typedef struct {
     int up;
     int down;
     int left;
@@ -38,13 +38,45 @@ struct Entity{
     Entity *next;
 };
 
+typedef struct Explosion Explosion;
+struct Explosion {
+    float x;
+    float y;
+    float dx;
+    float dy;
+    int r, g, b, a;
+    Explosion *next;
+};
+
+typedef struct Debris Debris;
+struct Debris {
+    float x;
+    float y;
+    float dx;
+    float dy;
+    SDL_Rect rect;
+    SDL_Texture *texture;
+    int life;
+    Debris *next;
+};
+
 typedef struct {
-    Entity fighterHead, *fighterTail;
-    Entity bulletHead,  *bulletTail;
+    Entity    fighterHead,   *fighterTail;
+    Entity    bulletHead,    *bulletTail;
+    Explosion explosionHead, *explosionTail;
+    Debris    debrisHead,    *debrisTail;
 } Stage;
+
+typedef struct {
+    int x;
+    int y;
+    int speed;
+} Star;
 
 static App        app;
 static Controller controller;
 static Stage      stage;
 static Entity     *player;
+static Star       stars[MAX_STARS];
+
 #endif

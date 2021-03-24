@@ -43,6 +43,7 @@ void init_sdl(void)
                 else
                 {
                     // succeeded
+                    SDL_ShowCursor(0);
                 }
             }
         }

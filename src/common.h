@@ -12,6 +12,8 @@
 
 #define FPS 60
 
+#define MAX_STARS 500
+
 #define MAX_KEYBOARD_SIZE 350
 
 #define SIDE_PLAYER 0
@@ -29,11 +31,16 @@ static SDL_Texture *bullet_texture;
 static SDL_Texture *enemy_texture;
 static SDL_Texture *enemy_bullet_texture;
 
+static SDL_Texture *background;
+static SDL_Texture *explosion_texture;
+
 static int enemy_spawn_timer;
 static int stage_reset_timer;
+static int backgroundX;
 
 SDL_Texture *load_texture(char *file_name);
-void blit(SDL_Texture *texture, int x, int y);
+static void blit(SDL_Texture *texture, int x, int y);
+static void blit_rect(SDL_Texture *texture, SDL_Rect *src, int x, int y);
 
 inline static int collision(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2);
 inline static void calc_slope(int x1, int y1, int x2, int y2, float *dx, float *dy);

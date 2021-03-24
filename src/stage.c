@@ -2,12 +2,19 @@
 #include "structs.h"
 
 static void init_player(void);
+static void init_starfield(void);
 
 static void logic(void);
 static void do_player(void);
 static void do_fighters(void);
 static void do_bullets(void);
 static void do_enemies(void);
+
+static void do_background(void);
+static void do_explosions(void);
+static void do_starfield(void);
+static void do_debris(void);
+
 
 static void clip_player(void);
 
@@ -22,7 +29,14 @@ static void draw_player(void);
 static void draw_fighters(void);
 static void draw_bullets(void);
 
+static void draw_background(void);
+static void draw_starfields(void);
+static void draw_debris(void);
+static void draw_explosions(void);
+
 static void reset_stage(void);
+static void add_explosion(int x, int y, int num);
+static void add_debris(Entity *e);
 
 void init_stage(void)
 {
@@ -30,8 +44,10 @@ void init_stage(void)
     //app.delegate.logic = draw;
 
     memset(&stage, 0, sizeof(Stage));
-    stage.fighterTail = &stage.fighterHead;
-    stage.bulletTail  = &stage.bulletHead;
+    stage.fighterTail   = &stage.fighterHead;
+    stage.bulletTail    = &stage.bulletHead;
+    stage.explosionTail = &stage.explosionHead;
+    stage.debrisTail    = &stage.debrisHead;
 
     player_texture       = load_texture("../assets/player.png");
     bullet_texture       = load_texture("../assets/playerBullet.png");
@@ -39,35 +55,58 @@ void init_stage(void)
     enemy_texture        = load_texture("../assets/enemy.png");
     enemy_bullet_texture = load_texture("../assets/alienBullet.png");
 
+    background           = load_texture("../assets/background.png");
+    explosion_texture    = load_texture("../assets/explosion.png");
+
     reset_stage();
 }
 
 static void reset_stage(void)
 {
     Entity *e;
-     while (stage.fighterHead.next)
-     {
-         e = stage.fighterHead.next;
-         stage.fighterHead.next = e->next;
-         free(e);
-     }
+    Explosion *ex;
+    Debris *d;
 
-     while (stage.bulletHead.next)
-     {
-         e = stage.bulletHead.next;
-         stage.bulletHead.next = e->next;
-         free(e);
-     }
+    while (stage.fighterHead.next)
+    {
+        e = stage.fighterHead.next;
+        stage.fighterHead.next = e->next;
+        free(e);
+    }
+
+    while (stage.bulletHead.next)
+    {
+        e = stage.bulletHead.next;
+        stage.bulletHead.next = e->next;
+        free(e);
+    }
+
+    while (stage.explosionHead.next)
+    {
+        ex = stage.explosionHead.next;
+        stage.explosionHead.next = ex->next;
+        free(ex);
+    }
+
+    while (stage.debrisHead.next)
+    {
+        d = stage.debrisHead.next;
+        stage.debrisHead.next = d->next;
+        free(d);
+    }
 
     memset(&stage, 0, sizeof(Stage));
     stage.fighterTail = &stage.fighterHead;
     stage.bulletTail  = &stage.bulletHead;
+    stage.explosionTail = &stage.explosionHead;
+    stage.debrisTail    = &stage.debrisHead;
 
     init_player();
+    init_starfield();
 
     enemy_spawn_timer = 0;
 
-    stage_reset_timer = FPS * 2;
+    stage_reset_timer = FPS * 3;
 }
 
 static void init_player(void)
@@ -87,12 +126,26 @@ static void init_player(void)
     player->side = SIDE_PLAYER;
 }
 
+static void init_starfield(void)
+{
+    int i;
+    for (i = 0 ; i < MAX_STARS ; i++)
+    {
+        stars[i].x = rand() % SCREEN_WIDTH;
+        stars[i].y = rand() % SCREEN_HEIGHT;
+        stars[i].speed = 1 + rand() % 8;
+    }
+}
+
 static void logic(void)
 {
     if (player == NULL && --stage_reset_timer <= 0)
     {
         reset_stage();
     }
+
+    do_background();
+    do_starfield();
 
     do_player();
 
@@ -105,6 +158,9 @@ static void logic(void)
     spwan_enemies();
 
     clip_player();
+
+    do_explosions();
+    do_debris();
 }
 
 static void do_player(void)
@@ -140,6 +196,149 @@ static void do_player(void)
     }
     player->x += player->dx;
     player->y += player->dy;
+}
+
+static void do_background(void)
+{
+    if (--backgroundX < -SCREEN_WIDTH)
+    {
+        backgroundX = 0;
+    }
+}
+
+static void do_starfield(void)
+{
+    int i;
+     for (i = 0 ; i < MAX_STARS ; i++)
+     {
+         stars[i].x -= stars[i].speed;
+         if (stars[i].x < 0)
+         {
+             stars[i].x = SCREEN_WIDTH + stars[i].x;
+         }
+     }
+}
+
+static void do_explosions(void)
+{
+    Explosion *e, *prev;
+
+    prev = &stage.explosionHead;
+
+    for (e = stage.explosionHead.next; e != NULL ; e = e->next)
+    {
+        e->x += e->dx;
+        e->y += e->dy;
+
+        if (--e->a <= 0)
+        {
+            if (e == stage.explosionTail)
+            {
+                stage.explosionTail = prev;
+            }
+
+            prev->next = e->next;
+            free(e);
+            e = prev;
+        }
+        prev = e;
+    }
+}
+
+static void do_debris(void)
+{
+    Debris *d, *prev;
+
+    prev = &stage.debrisHead;
+
+    for (d = stage.debrisHead.next ; d != NULL ; d = d->next)
+    {
+        d->x += d->dx;
+        d->y += d->dy;
+
+        d->dy += 0.5;
+
+        if (--d->life <= 0)
+        {
+            if (d == stage.debrisTail)
+            {
+                stage.debrisTail = prev;
+            }
+
+            prev->next = d->next;
+            free(d);
+            d = prev;
+        }
+
+        prev = d;
+    }
+}
+
+static void add_explosion(int x, int y, int num)
+{
+    Explosion *e;
+    int i;
+
+    for (i = 0 ; i < num ; i++)
+    {
+        e = malloc(sizeof(Explosion));
+        memset(e, 0, sizeof(Explosion));
+        stage.explosionTail->next = e;
+        stage.explosionTail = e;
+
+        e->x = x + (rand() % 32) - (rand() % 32);
+        e->y = y + (rand() % 32) - (rand() % 32);
+        e->dx = (rand() % 10) - (rand() % 10);
+        e->dy = (rand() % 10) - (rand() % 10);
+
+        e->dx /= 10;
+        e->dy /= 10;
+
+        switch (rand() % 4)
+        {
+            case 0: e->r = 255; break;
+            case 1: e->r = 255; e->g = 128; break;
+            case 2: e->r = 255; e->g = 255; break;
+            default:
+                    e->r = 255;
+                    e->g = 255;
+                    e->b = 255;
+                    break;
+        }
+        e->a = rand() % FPS * 3;
+    }
+}
+
+static void add_debris(Entity *e)
+{
+    Debris *d;
+    int x, y, w, h;
+
+    w = e->w / 2;
+    h = e->h / 2;
+
+    for (y = 0 ; y <= h ; y += h)
+    {
+        for (x = 0 ; x <= w ; x += w)
+        {
+            d = malloc(sizeof(Debris));
+            memset(d, 0, sizeof(Debris));
+            stage.debrisTail->next = d;
+            stage.debrisTail = d;
+
+            d->x = e->x + e->w / 2;
+			d->y = e->y + e->h / 2;
+			d->dx = (rand() % 5) - (rand() % 5);
+			d->dy = -(5 + (rand() % 12));
+			d->life = FPS * 2;
+			d->texture = e->texture;
+
+			d->rect.x = x;
+			d->rect.y = y;
+			d->rect.w = w;
+			d->rect.h = h;
+        }
+    }
 }
 
 static void clip_player(void)
@@ -344,14 +543,76 @@ static void spwan_enemies(void)
     }
 }
 
-
 static void draw(void)
 {
     if (player == NULL)
         return;
+
+    draw_background();
+    draw_starfields();
+
     draw_player();
     draw_fighters();
     draw_bullets();
+
+    draw_debris();
+    draw_explosions();
+}
+
+static void draw_background(void)
+{
+    SDL_Rect dest;
+    int x;
+    for (x = backgroundX ; x < SCREEN_WIDTH ; x += SCREEN_WIDTH)
+    {
+        dest.x = x;
+        dest.y = 0;
+        dest.w = SCREEN_WIDTH;
+        dest.h = SCREEN_HEIGHT;
+
+        SDL_RenderCopy(app.renderer, background, NULL, &dest);
+    }
+}
+
+static void draw_starfields(void)
+{
+    int i, c;
+
+    for (i = 0 ; i < MAX_STARS ; i++)
+    {
+        c = 32 * stars[i].speed;
+
+        SDL_SetRenderDrawColor(app.renderer, c, c, c, 255);
+        SDL_RenderDrawLine(app.renderer, stars[i].x, stars[i].y, stars[i].x + 3, stars[i].y);
+    }
+
+}
+
+static void draw_debris(void)
+{
+    Debris *d;
+
+    for (d = stage.debrisHead.next ; d != NULL ; d = d->next)
+    {
+        blit_rect(d->texture, &d->rect, d->x, d->y);
+    }
+}
+
+static void draw_explosions(void)
+{
+    Explosion *e;
+    SDL_SetRenderDrawBlendMode(app.renderer, SDL_BLENDMODE_ADD);
+    SDL_SetTextureBlendMode(explosion_texture, SDL_BLENDMODE_ADD);
+
+    for (e = stage.explosionHead.next ; e != NULL ; e = e->next)
+    {
+        SDL_SetTextureColorMod(explosion_texture, e->r, e->g, e->b);
+		SDL_SetTextureAlphaMod(explosion_texture, e->a);
+
+		blit(explosion_texture, e->x, e->y);
+    }
+
+    SDL_SetRenderDrawBlendMode(app.renderer, SDL_BLENDMODE_NONE);
 }
 
 static void draw_player(void)
